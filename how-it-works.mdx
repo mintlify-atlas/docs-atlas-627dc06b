@@ -1,0 +1,127 @@
+---
+title: "How leading-zero-util renames and normalizes files"
+sidebarTitle: "How It Works"
+description: "A deep-dive into the normalization algorithm, filename parsing, collision detection, and edge-case handling inside leading-zero-util."
+---
+
+Every rename operation performed by `leading-zero-util` follows a deterministic pipeline: parse each entry in the target directory into a prefix, a numeric part, and an extension; compute a target width based on the shortest numeric part found; pad or strip leading zeros accordingly; then verify the target path does not already exist before calling `fs::rename`. Understanding each stage helps you predict exactly what will happen before you run a command.
+
+## Filename Parsing
+
+Before any zeros are added or removed, the tool parses every entry in the target directory into three components. Only entries whose name ends in one or more ASCII digits (before the extension) are eligible — all others are silently skipped.
+
+The parsing steps are:
+
+1. **Locate the extension boundary.** The tool calls `rfind('.')` on the filename to find the last dot. If no dot is present, the entire filename length is used as the boundary (extension-less files are fully supported).
+2. **Find the trailing digit run.** Starting from the extension boundary and scanning backwards, the tool collects every character that is an ASCII digit (`0`–`9`). This produces the *numeric* part. If the character immediately before the extension boundary is not a digit, the file is skipped entirely.
+3. **Split into parts.** Everything before the digit run is the *prefix*, the digit run itself is *numeric*, and the dot plus everything after it is the *extension* (empty string for extension-less files).
+
+```text
+problem-007.rs
+  prefix:    "problem-"
+  numeric:   "007"
+  extension: ".rs"
+```
+
+```text
+day_09
+  prefix:    "day_"
+  numeric:   "09"
+  extension: ""
+```
+
+```text
+README.md        ← last char before "." is "E", not a digit → skipped
+src              ← last char is "c", not a digit → skipped
+```
+
+## Normalization Algorithm
+
+The default add mode normalizes numeric widths across **all** eligible entries in the directory. This ensures that after the operation every renamed file sorts consistently, regardless of how many digits each file started with.
+
+The algorithm runs in two passes:
+
+1. **Scan pass.** Iterate over all eligible files and track the *minimum* numeric-part length — the shortest digit run found across the whole set.
+2. **Rename pass.** For each eligible file, compute `pad = target_width - numeric.len()`, where `target_width = minimum_length + N` (and `N` is the value of `--number`, defaulting to `1`). Prepend `pad` zeros to the numeric part. If a file's numeric part is already at or above `target_width`, `pad` saturates to zero and the file is left unchanged.
+
+The table below walks through a concrete directory with `N=1`:
+
+| Input filename   | Numeric part | Numeric length | Target width | Zeros added | Output filename   |
+|------------------|--------------|----------------|-------------|-------------|-------------------|
+| `problem-1.rs`   | `1`          | 1 (minimum)    | 1 + 1 = 2   | 1           | `problem-01.rs`   |
+| `problem-7.rs`   | `7`          | 1              | 2           | 1           | `problem-07.rs`   |
+| `problem-11.rs`  | `11`         | 2 ≥ target     | 2           | 0           | `problem-11.rs`   |
+| `problem-99.rs`  | `99`         | 2 ≥ target     | 2           | 0           | `problem-99.rs`   |
+
+Only the two single-digit files are renamed; the two-digit files are already at or above the target width and are untouched.
+
+## Basic Add Mode
+
+Passing `--basic-add` (`-b`) skips the scan pass entirely. Instead of computing a shared target width, the tool unconditionally prepends exactly `N` zeros to every eligible file, no matter how many digits that file already has.
+
+<Warning>
+  Because `--basic-add` does not normalize across files, repeated invocations
+  accumulate zeros independently on each file. Use the default normalized mode
+  when you want a consistent digit-width across an entire directory.
+</Warning>
+
+For example, running `leading-zero-util -b -n 1` on the same directory as above produces:
+
+| Input filename   | Output filename    |
+|------------------|--------------------|
+| `problem-1.rs`   | `problem-01.rs`    |
+| `problem-7.rs`   | `problem-07.rs`    |
+| `problem-11.rs`  | `problem-011.rs`   |
+| `problem-99.rs`  | `problem-099.rs`   |
+
+<Tip>
+  If `--basic-add` is combined with `--decrease`, the tool prints a warning and
+  falls back to the normal decrease behaviour — basic mode applies only to
+  adding zeros.
+</Tip>
+
+## Remove Mode
+
+Passing `--decrease` (`-d`) reverses the operation: the tool strips leading zeros from the numeric part rather than adding them. The number of zeros removed is capped at two limits simultaneously:
+
+- At most `N` zeros are removed (where `N` is `--number`, default `1`).
+- The numeric part always retains at least one digit — it will never be reduced to an empty string.
+
+The effective removal count for a given file is therefore:
+
+```
+remove = min(N, leading_zeros_in_numeric, numeric.len() - 1)
+```
+
+For example, running `leading-zero-util -d -n 2` on:
+
+| Input filename      | Leading zeros | Remove | Output filename    |
+|---------------------|---------------|--------|--------------------|
+| `problem-001.zig`   | 2             | 2      | `problem-1.zig`    |
+| `problem-011.zig`   | 1             | 1      | `problem-11.zig`   |
+| `problem-000.zig`   | 2 (but len-1 = 2) | 2  | `problem-0.zig`    |
+
+The last row illustrates the safety cap: although `N=2` and there are two leading zeros, removing both would leave only the final `0` digit — which is still a valid one-digit numeric part, so two zeros are stripped and `0` is retained.
+
+## Collision Detection
+
+Before every `fs::rename` call the tool runs `skip_rename`, a guard function that prevents data loss by checking two conditions:
+
+1. **No-op detection.** If the computed new name is identical to the current name, the rename is skipped and a message is printed stating that the leading zeros are already correct.
+2. **Existence check.** The tool calls `fs::exists` on the target path. If the target already exists (i.e., renaming would overwrite a different file), the rename is skipped and an error message is printed. If the existence check itself fails — for example due to a permissions error — the rename is also skipped and a separate message is printed.
+
+Only when both checks pass does the tool proceed to `fs::rename`. This means **no existing file can be silently overwritten** under any circumstance.
+
+```
+file1.txt  →  would become  file01.txt
+                             ↑
+             file01.txt already exists → rename skipped, file01.txt preserved
+```
+
+<Note>
+  Subdirectories are treated identically to files throughout the entire
+  pipeline. If a subdirectory's name ends in one or more digits — for example
+  `day_01` or `chapter3` — it is eligible for renaming under exactly the same
+  rules as a regular file. The directory's contents are not affected; only its
+  name in the parent directory changes.
+</Note>

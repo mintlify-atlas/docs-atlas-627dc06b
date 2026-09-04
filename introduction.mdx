@@ -1,0 +1,49 @@
+---
+title: "leading-zero-util: Zero-padding CLI for filenames"
+sidebarTitle: "Introduction"
+description: "leading-zero-util renames files by adding or removing leading zeros from numeric suffixes. Normalize an entire directory's numbering in one command."
+---
+
+`leading-zero-util` is a fast, focused command-line utility that adds or removes leading zeros from the numeric suffixes of filenames and directory names. Whether you're tidying up a folder of numbered problem sets, photo exports, or project directories, it handles the tedious renaming in a single command — with smart cross-file normalization so every entry lines up consistently.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="box-archive" href="/installation">
+    Install via Homebrew, `cargo install`, or build from source.
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Run your first rename in under a minute.
+  </Card>
+  <Card title="Command Reference" icon="terminal" href="/command-reference">
+    Every flag and argument, with examples.
+  </Card>
+  <Card title="How It Works" icon="gears" href="/how-it-works">
+    Normalization logic, split-index detection, and collision safety explained.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Smart Normalization" icon="arrows-left-right-to-line">
+    The default add mode inspects every eligible file in the directory, finds the shortest numeric suffix, and pads all files to the same target width. Running `leading-zero-util` on `problem-1` and `problem-11` yields `problem-01` and `problem-11` — not `problem-011`.
+  </Card>
+  <Card title="Basic Add Mode" icon="plus">
+    Pass `--basic-add` (`-b`) to prepend zeros naively without any cross-file normalization. Each file receives exactly `N` additional zeros regardless of what its neighbors look like — `problem-1` → `problem-01` and `problem-11` → `problem-011`.
+  </Card>
+  <Card title="Remove Mode" icon="minus">
+    Pass `--decrease` (`-d`) to strip leading zeros instead of adding them. The tool always preserves at least one digit, so it will never reduce a numeric suffix to an empty string, no matter how many zeros you request to remove.
+  </Card>
+  <Card title="Collision Safety" icon="shield-halved">
+    Before every rename, `leading-zero-util` checks whether the target name already exists. If it does, the rename is skipped and the existing file is left completely untouched — data loss is impossible.
+  </Card>
+  <Card title="Files and Directories" icon="folder-open">
+    Normalization applies to both regular files and subdirectories inside the target path. Any entry whose name (excluding the file extension) ends in digits is eligible — everything else is silently ignored.
+  </Card>
+  <Card title="Configurable Count" icon="sliders">
+    The `--number` (`-n`) flag controls how many zeros to add or remove per run. It defaults to `1`, but you can pass any positive integer — for example, `-n 3` to jump straight to three-digit padding in a single command.
+  </Card>
+</CardGroup>
+
+## License
+
+`leading-zero-util` is released under the **MIT License**. See the [LICENSE](https://github.com/KaonQuantum/leading-zero-util/blob/main/LICENSE) file in the repository for the full text.

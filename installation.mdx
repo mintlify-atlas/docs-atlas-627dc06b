@@ -1,0 +1,64 @@
+---
+title: "Install leading-zero-util via Homebrew or Cargo"
+sidebarTitle: "Installation"
+description: "Install leading-zero-util with Homebrew (recommended), cargo install from crates.io, or build directly from the GitHub source repository."
+---
+
+`leading-zero-util` is distributed through Homebrew, crates.io, and GitHub. Choose whichever method fits your existing toolchain — all three produce the same binary. If you're on macOS or Linux and already have Homebrew, the tap-based install is the easiest path and takes care of shell completions automatically.
+
+## Install
+
+<Steps>
+  <Step title="Homebrew (recommended)">
+    First, add the KaonQuantum tap, then install the formula:
+
+    ```sh
+    brew tap KaonQuantum/leading-zero-util
+    brew install leading-zero-util
+    ```
+
+    <Tip>
+      Homebrew automatically installs shell completions for **Bash**, **Zsh**, and **Fish** when you use this method — no extra steps required.
+    </Tip>
+  </Step>
+
+  <Step title="cargo install (crates.io)">
+    If you have Cargo available, install directly from crates.io:
+
+    ```sh
+    cargo install leading-zero-util
+    ```
+
+    <Note>
+      This requires Rust and Cargo to be installed on your system. If you don't have them yet, follow the instructions at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install), then re-run the command above.
+    </Note>
+  </Step>
+
+  <Step title="Build from source">
+    Clone the repository, enter the directory, and install the binary from the local source tree:
+
+    ```sh
+    git clone https://github.com/KaonQuantum/leading-zero-util
+    cd leading-zero-util
+    cargo install --path .
+    ```
+  </Step>
+</Steps>
+
+## Verify Installation
+
+Once installed, confirm the binary is on your `PATH` by printing the version:
+
+```sh
+leading-zero-util --version
+```
+
+You should see output similar to:
+
+```
+leading-zero-util 1.0.1
+```
+
+<Note>
+  If you installed via `cargo install` or from source, shell completions are **not** set up automatically. See the [Shell Completions](/shell-completions) page for per-shell setup instructions covering Bash, Zsh, Fish, Elvish, PowerShell, and Nushell.
+</Note>

@@ -1,0 +1,45 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "leading-zero-util",
+  "projectDescription": "A CLI utility to add or remove leading zeros from the numeric suffixes of filenames and directory names in a given directory.",
+  "theme": "luma",
+  "primaryColor": "#428bca",
+  "lightColor": "#241c1c",
+  "darkColor": null,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": ["introduction", "installation"]
+      },
+      {
+        "group": "Usage",
+        "pages": ["quickstart", "command-reference", "configuration"]
+      },
+      {
+        "group": "How It Works",
+        "pages": ["how-it-works", "shell-completions"]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Add leading zeros to filenames with numeric suffixes, with normalization across all files in a directory",
+    "Remove leading zeros from filenames with numeric suffixes",
+    "Basic (non-normalizing) add mode for naive zero insertion",
+    "Configurable number of zeros to add or remove via --number flag",
+    "Operates on both files and directories (any entry whose name ends in digits)",
+    "Prevents accidental overwrites when a rename would collide with an existing file",
+    "Shell completion support for Bash, Zsh, Fish, Elvish, PowerShell, and Nushell",
+    "Man page generation at build time via clap_mangen"
+  ],
+  "publicApiSurface": [
+    "leading-zero-util [PATH]",
+    "--number / -n <N>  (default: 1)",
+    "--decrease / -d",
+    "--basic-add / -b",
+    "--help / -h",
+    "--version / -V",
+    "--generate-completions <SHELL>",
+    "--generate-nu-completions"
+  ]
+}

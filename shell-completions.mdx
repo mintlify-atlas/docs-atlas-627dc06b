@@ -1,0 +1,112 @@
+---
+title: "Set up shell completions for leading-zero-util"
+sidebarTitle: "Shell Completions"
+description: "Enable tab-completion for leading-zero-util in Bash, Zsh, Fish, Elvish, PowerShell, and Nushell using the built-in completion generator."
+---
+
+`leading-zero-util` ships with a built-in completion generator that produces tab-completion scripts for every major shell. If you installed via Homebrew, completions for Bash, Zsh, and Fish are configured automatically — no further steps are needed for those shells. For all other shells, or for any install method other than Homebrew, follow the instructions for your shell below.
+
+<Note>
+  Completions are generated at runtime by running
+  `leading-zero-util --generate-completions <shell>` and redirecting the output
+  to the appropriate location for your shell. Nushell uses a separate flag:
+  `--generate-nu-completions`. Once the file is in place, you source or
+  reference it from your shell's configuration file and the completions become
+  available in every new session.
+</Note>
+
+## Shell Setup
+
+<AccordionGroup>
+
+<Accordion title="Bash">
+  Generate the completion script and place it in your Bash completions directory, then source it from `~/.bashrc` so it loads in every new shell session.
+
+  ```bash
+  mkdir -p ~/.bash_completion.d/
+  leading-zero-util --generate-completions bash > ~/.bash_completion.d/leading-zero-util.bash
+  ```
+
+  Add the following line to your `~/.bashrc`:
+
+  ```bash title="~/.bashrc"
+  source ~/.bash_completion.d/leading-zero-util.bash
+  ```
+
+  Reload your shell or run `source ~/.bashrc` to activate completions immediately.
+</Accordion>
+
+<Accordion title="Zsh">
+  Generate the completion script into a directory on your `$fpath`, then ensure that directory is registered before `compinit` runs in `~/.zshrc`.
+
+  ```bash
+  mkdir -p ~/.zsh/completions/
+  leading-zero-util --generate-completions zsh > ~/.zsh/completions/_leading-zero-util
+  ```
+
+  Add the following lines to your `~/.zshrc` **before** any existing `compinit` call:
+
+  ```bash title="~/.zshrc"
+  fpath=(~/.zsh/completions $fpath)
+  autoload -Uz compinit && compinit
+  ```
+
+  Reload your shell or run `source ~/.zshrc` to activate completions immediately.
+</Accordion>
+
+<Accordion title="Fish">
+  Generate the completion script directly into Fish's completions directory. Fish automatically sources all files in that directory — no further configuration is needed.
+
+  ```bash
+  mkdir -p ~/.config/fish/completions/
+  leading-zero-util --generate-completions fish > ~/.config/fish/completions/leading-zero-util.fish
+  ```
+
+  Open a new Fish session and completions will be available straight away.
+</Accordion>
+
+<Accordion title="Elvish">
+  Generate the completion script into Elvish's library directory, then load it from `rc.elv` using the `use` directive.
+
+  ```bash
+  mkdir -p ~/.config/elvish/lib/
+  leading-zero-util --generate-completions elvish > ~/.config/elvish/lib/leading-zero-util.elv
+  ```
+
+  Add the following line to your `~/.config/elvish/rc.elv`:
+
+  ```bash title="~/.config/elvish/rc.elv"
+  use leading-zero-util
+  ```
+
+  Restart Elvish or re-source `rc.elv` to activate completions.
+</Accordion>
+
+<Accordion title="PowerShell">
+  Append the generated completion script directly to your PowerShell profile file. The `>>` operator appends without overwriting any existing profile content.
+
+  ```powershell
+  leading-zero-util --generate-completions powershell >> $PROFILE
+  ```
+
+  Restart PowerShell or reload your profile with `. $PROFILE` to activate completions.
+</Accordion>
+
+<Accordion title="Nushell">
+  Nushell uses a dedicated flag instead of `--generate-completions`. Generate the completion file into your Nushell completions directory, then source it from `config.nu`.
+
+  ```nu
+  mkdir -p ~/.config/nushell/completions/
+  leading-zero-util --generate-nu-completions o> ~/.config/nushell/completions/leading-zero-util.nu
+  ```
+
+  Add the following line to your `~/.config/nushell/config.nu`:
+
+  ```nu title="~/.config/nushell/config.nu"
+  source ~/.config/nushell/completions/leading-zero-util.nu
+  ```
+
+  Restart Nushell to activate completions.
+</Accordion>
+
+</AccordionGroup>

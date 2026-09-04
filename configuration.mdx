@@ -1,0 +1,117 @@
+---
+title: "Configuring leading-zero-util behavior"
+sidebarTitle: "Configuration"
+description: "Understand the default behavior of leading-zero-util, how normalization works, and when to use --number, --decrease, and --basic-add flags."
+---
+
+`leading-zero-util` offers three distinct operating modes — normalized add, basic add, and decrease — that can be combined with the `--number` flag to precisely control how many zeros are added or removed. This page explains how each mode works, which entries are eligible for renaming, and how the tool protects you from accidental data loss through collision detection.
+
+## Default behavior
+
+Without any flags, `leading-zero-util` runs in **normalized add** mode with `--number 1`. It scans the target directory, identifies the shortest numeric suffix among all qualifying entries, and pads every qualifying entry up to that width plus one. Entries that are already at or above the target width are left untouched.
+
+```bash
+# Add one zero in normalized mode — the default
+leading-zero-util
+```
+
+## Choosing your mode
+
+<Tabs>
+  <Tab title="Normalized Add (default)">
+    Normalized add is the default mode. The tool finds the shortest numeric suffix in the directory and pads all qualifying entries to `(shortest width) + N`, where `N` is the value of `--number` (default `1`). This keeps numeric suffixes visually consistent across the entire directory — useful when entries have naturally accumulated different-width numbers over time.
+
+    **Example** — directory contains `problem-1.rs`, `problem-7.rs`, and `problem-11.rs`, running with `-n 1`:
+
+    | Before | After |
+    |---|---|
+    | `problem-1.rs` | `problem-01.rs` |
+    | `problem-7.rs` | `problem-07.rs` |
+    | `problem-11.rs` | `problem-11.rs` (already at target width) |
+
+    The shortest suffix has width 1, so the target width becomes `1 + 1 = 2`. `problem-11.rs` already has a two-digit suffix and is unchanged.
+
+    ```bash
+    leading-zero-util          # normalized add, N=1
+    leading-zero-util -n 2     # normalized add, N=2
+    ```
+  </Tab>
+
+  <Tab title="Basic Add (--basic-add)">
+    Basic add mode, enabled with `--basic-add` (or `-b`), prepends exactly `N` zeros to the numeric suffix of every qualifying entry. It does **not** look at other filenames to determine a target width — each file is padded independently.
+
+    **Example** — same directory, `problem-1.rs` and `problem-11.rs`, running with `-b -n 1`:
+
+    | Before | After |
+    |---|---|
+    | `problem-1.rs` | `problem-01.rs` |
+    | `problem-11.rs` | `problem-011.rs` |
+
+    Both files receive one extra zero regardless of what the other looks like, so the directory ends up with mixed-width suffixes.
+
+    Use basic add when you want to bulk-prepend a fixed number of zeros without any cross-file analysis — for instance, when all files already have identical-width suffixes and you just need one more zero on each.
+
+    ```bash
+    leading-zero-util -b        # basic add, N=1
+    leading-zero-util -b -n 2   # basic add, N=2
+    ```
+  </Tab>
+
+  <Tab title="Remove (--decrease)">
+    Decrease mode, enabled with `--decrease` (or `-d`), strips up to `N` leading zeros from the numeric suffix of each qualifying entry. The tool counts only the leading zeros within the suffix (characters that are `0` before the first non-zero digit) and removes at most `N` of them.
+
+    **Minimum-digit guarantee:** at least one digit is always preserved. Even if the suffix is `000`, with `-d -n 3` it becomes `0` — the numeric part is never reduced to an empty string.
+
+    **Example** — directory contains `problem-001.rs` and `problem-011.rs`, running with `-d -n 2`:
+
+    | Before | After |
+    |---|---|
+    | `problem-001.rs` | `problem-1.rs` (2 leading zeros removed) |
+    | `problem-011.rs` | `problem-11.rs` (1 leading zero removed — only 1 was present) |
+
+    ```bash
+    leading-zero-util -d        # remove 1 zero
+    leading-zero-util -d -n 2   # remove up to 2 zeros
+    ```
+  </Tab>
+</Tabs>
+
+## Collision safety
+
+Before renaming any entry, `leading-zero-util` checks whether the target name already exists in the directory. If it does, that particular rename is **skipped** and a warning is printed to standard output. The existing file is never overwritten, and the source file is left in place:
+
+```
+File rename file1.txt -> file01.txt failed. file01.txt already exists.
+```
+
+The final summary line reflects only the renames that actually succeeded. You can safely re-run the tool after resolving any collisions manually.
+
+## Scope
+
+`leading-zero-util` considers an entry eligible for renaming when the following conditions are met:
+
+- The entry is a direct child of the target directory (the tool does not recurse into subdirectories).
+- The entry's name, **excluding the file extension**, ends in one or more ASCII digit characters (`0`–`9`).
+
+The extension is determined by the last `.` in the filename. If there is no `.`, the entire name is treated as the stem. Some concrete examples:
+
+| Entry | Eligible? | Reason |
+|---|---|---|
+| `problem-7.rs` | ✅ Yes | Stem `problem-7` ends in `7` |
+| `day_09` | ✅ Yes | No extension; name ends in `9` |
+| `photo-2024-01-15.jpg` | ✅ Yes | Stem `photo-2024-01-15` ends in `15` |
+| `README.md` | ❌ No | Stem `README` ends in `E` |
+| `src` | ❌ No | Name ends in `c` |
+| `report-final.pdf` | ❌ No | Stem `report-final` ends in `l` |
+
+Subdirectories follow the same rule — a directory named `chapter-3` is eligible, while one named `assets` is not.
+
+<Accordion title="What happens if I pass --basic-add and --decrease together?">
+  Passing both `--basic-add` and `--decrease` at the same time is not an error, but `--basic-add` has no meaning in decrease mode. When the tool detects this combination it prints a yellow warning message to standard output and then proceeds with a normal decrease, ignoring `--basic-add`:
+
+  ```
+  Warning: Basic is only an option for increasing. Decreasing normally.
+  ```
+
+  The rename operation then runs exactly as it would with `--decrease` alone. No files are skipped or otherwise affected by the spurious `--basic-add` flag.
+</Accordion>

@@ -1,47 +1,93 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get started with leading-zero-util"
+sidebarTitle: "Quickstart"
+description: "Learn how to add and remove leading zeros from filenames in a directory using leading-zero-util in four practical steps."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+`leading-zero-util` is a command-line tool that adds or removes leading zeros from the numeric suffixes of filenames and directory names. It operates on every entry in a directory whose name ends in ASCII digits, leaving everything else untouched. This guide walks you through installing the tool and running your first rename operation in four steps.
 
 <Steps>
   <Step title="Install">
-    Describe how to install your product or sign up.
+    The quickest way to get `leading-zero-util` is through Homebrew. Tap the formula repository and install in one go:
 
     ```bash
-    npm install your-package
+    brew tap KaonQuantum/leading-zero-util
+    brew install leading-zero-util
     ```
+
+    Homebrew also sets up shell completions for Bash, Zsh, and Fish automatically. For other install methods, see the [Command Reference](/command-reference).
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+
+  <Step title="Navigate to your directory">
+    Change into the folder whose entries you want to rename. For example, if your problem set lives at `~/solutions`:
 
     ```bash
-    your-cli init
+    cd ~/solutions
     ```
+
+    Running the tool without a `PATH` argument always operates on the current working directory.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+
+  <Step title="Add one leading zero (normalized)">
+    Run `leading-zero-util` with no arguments. The tool inspects every entry in the current directory, finds the shortest numeric suffix, and pads all numeric filenames to that width plus one:
 
     ```bash
-    your-cli start
+    leading-zero-util
     ```
+
+    Given a directory that looks like this beforehand:
+
+    ```
+    # Before
+    problem-1.rs   problem-7.rs   problem-11.rs
+    ```
+
+    The tool renames only the entries that are narrower than the target width, producing:
+
+    ```
+    # After
+    problem-01.rs  problem-07.rs  problem-11.rs
+    ```
+
+    `problem-11.rs` is already at the target width and is left as-is.
+  </Step>
+
+  <Step title="Verify the output">
+    `leading-zero-util` prints a line for each file it renames, followed by a summary once it finishes. A typical run looks like:
+
+    ```
+    Succesfully Renamed: problem-1.rs -> problem-01.rs
+    Succesfully Renamed: problem-7.rs -> problem-07.rs
+    Successfully changed 2 filenames.
+    ```
+
+    If no entries needed renaming, the tool prints `Changed zero filenames.` instead. No files are ever silently overwritten — if the destination name already exists, that rename is skipped and a warning is printed.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Common tasks
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+The examples below cover the three most common workflows beyond the default. Pick the one that matches your situation.
+
+<CodeGroup>
+
+```bash Add two zeros to a specific path
+# Add 2 leading zeros to every numeric entry in ~/solutions
+leading-zero-util ~/solutions -n 2
+```
+
+```bash Remove one leading zero
+# Strip 1 leading zero from every numeric entry in the current directory
+leading-zero-util -d
+```
+
+```bash Add zeros without normalizing
+# Prepend 1 zero to every numeric entry, regardless of other filenames
+leading-zero-util -b
+```
+
+</CodeGroup>
+
+<Tip>
+  See the [Command Reference](/command-reference) page for a full list of flags, their defaults, and additional usage examples.
 </Tip>

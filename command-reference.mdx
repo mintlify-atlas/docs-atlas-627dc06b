@@ -1,0 +1,95 @@
+---
+title: "leading-zero-util command flags and arguments"
+sidebarTitle: "Command Reference"
+description: "Full reference for leading-zero-util: the PATH argument, --number, --decrease, --basic-add flags, their defaults, and real usage examples."
+---
+
+`leading-zero-util` exposes a small, focused set of arguments and flags that control which directory to operate on, how many zeros to add or remove, and whether to apply normalization across files. This page documents every argument and option in full, along with concrete examples for each scenario.
+
+## Synopsis
+
+```bash
+leading-zero-util [PATH] [OPTIONS]
+```
+
+## Arguments
+
+<ParamField path="PATH" type="string">
+  The path to the directory you want to operate on. Accepts any path that your shell can resolve — absolute, relative, or `~`-prefixed. When omitted, `leading-zero-util` operates on the current working directory.
+</ParamField>
+
+## Options
+
+<ParamField query="--number" type="integer" default="1">
+  **Short form: `-n`**
+
+  The number of leading zeros to add to, or remove from, each qualifying filename. Must be a non-negative integer. Combine with `--decrease` to remove that many zeros instead of adding them.
+</ParamField>
+
+<ParamField query="--decrease" type="boolean">
+  **Short form: `-d`**
+
+  Remove leading zeros instead of adding them. The tool strips up to `--number` leading zeros from the numeric suffix of each qualifying entry, but always preserves at least one digit — the numeric part is never reduced to an empty string.
+</ParamField>
+
+<ParamField query="--basic-add" type="boolean">
+  **Short form: `-b`**
+
+  Add zeros naively, without normalizing across files. Each qualifying entry receives exactly `--number` extra zeros prepended to its numeric suffix, regardless of what other filenames look like. Has no effect when combined with `--decrease`; the tool will print a warning and decrease normally.
+</ParamField>
+
+<ParamField query="--help" type="boolean">
+  **Short form: `-h`**
+
+  Print the help message and exit.
+</ParamField>
+
+<ParamField query="--version" type="boolean">
+  **Short form: `-V`**
+
+  Print the version string and exit.
+</ParamField>
+
+## Examples
+
+**Add one leading zero (normalized) to all qualifying entries in the current directory:**
+
+```bash
+leading-zero-util
+```
+
+---
+
+**Add two leading zeros to all qualifying entries in a specific directory:**
+
+```bash
+leading-zero-util ~/solutions -n 2
+```
+
+---
+
+**Remove one leading zero from qualifying entries in the current directory:**
+
+```bash
+leading-zero-util -d
+```
+
+---
+
+**Remove two leading zeros from qualifying entries in the current directory:**
+
+```bash
+leading-zero-util -d -n 2
+```
+
+---
+
+**Add one zero naively (without normalizing across files):**
+
+```bash
+leading-zero-util -b
+```
+
+<Note>
+  Only entries whose names end in one or more ASCII digits — when the file extension is excluded — are considered for renaming. The numeric suffix is identified as the longest run of digit characters immediately before the extension separator (`.`), or before the end of the name if there is no extension. Files and directories whose names end in a non-digit character, such as `README.md` or `src`, are always skipped silently.
+</Note>
