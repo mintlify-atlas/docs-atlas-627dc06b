@@ -1,5 +1,5 @@
 ---
-title: "leading-zero-util command flags and arguments"
+title: "leading-zero-util CLI Flags, Arguments, and Usage Examples"
 sidebarTitle: "Command Reference"
 description: "Full reference for leading-zero-util: the PATH argument, --number, --decrease, --basic-add flags, their defaults, and real usage examples."
 ---
@@ -49,6 +49,28 @@ leading-zero-util [PATH] [OPTIONS]
 
   Print the version string and exit.
 </ParamField>
+
+## Shell completion flags
+
+These flags are hidden from the standard `--help` output. They are used to generate shell completion scripts and then exit immediately — no renaming is performed.
+
+<ParamField query="--generate-completions" type="string">
+  Generate a completion script for the specified shell and print it to standard output. Accepted values: `bash`, `zsh`, `fish`, `elvish`, `powershell`.
+
+  ```bash
+  leading-zero-util --generate-completions bash
+  ```
+</ParamField>
+
+<ParamField query="--generate-nu-completions" type="boolean">
+  Generate a Nushell completion script and print it to standard output.
+
+  ```bash
+  leading-zero-util --generate-nu-completions
+  ```
+</ParamField>
+
+See the [Shell Completions](/shell-completions) page for full setup instructions for each shell.
 
 ## Examples
 

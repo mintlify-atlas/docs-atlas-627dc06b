@@ -95,13 +95,13 @@ remove = min(N, leading_zeros_in_numeric, numeric.len() - 1)
 
 For example, running `leading-zero-util -d -n 2` on:
 
-| Input filename      | Leading zeros | Remove | Output filename    |
-|---------------------|---------------|--------|--------------------|
-| `problem-001.zig`   | 2             | 2      | `problem-1.zig`    |
-| `problem-011.zig`   | 1             | 1      | `problem-11.zig`   |
-| `problem-000.zig`   | 2 (but len-1 = 2) | 2  | `problem-0.zig`    |
+| Input filename    | Leading zeros | Remove | Output filename  |
+|-------------------|---------------|--------|------------------|
+| `problem001.zig`  | 2             | 2      | `problem1.zig`   |
+| `problem011.zig`  | 1             | 1      | `problem11.zig`  |
+| `problem000.zig`  | 3             | 2      | `problem0.zig`   |
 
-The last row illustrates the safety cap: although `N=2` and there are two leading zeros, removing both would leave only the final `0` digit — which is still a valid one-digit numeric part, so two zeros are stripped and `0` is retained.
+The last row illustrates the safety cap: `problem000.zig` has three leading zeros, but `N=2` caps the removal at two, so only two zeros are stripped and the single remaining `0` digit is preserved.
 
 ## Collision Detection
 
